@@ -30,7 +30,7 @@ question_index = 0
 
 def draw():
     screen.fill("black")
-    screen.draw.filled_rect(marque_box,"blue")
+    screen.draw.filled_rect(marque_box,"black")
     screen.draw.filled_rect(question_box,"white")
     screen.draw.filled_rect(timer_box, "green")
     #screen.draw.filled_rect(ans_box1, "grey")
@@ -76,16 +76,78 @@ def update():
     
     
 def move_marque(): 
-    pass
-
+    marque_box.x -= 2
+    if marque_box.right < 0:
+        marque_box.left = WIDTH
+        
+    
 def read_question_file():
-    pass
+    global question_count, questions 
+    q_file = open(question_file_name, "r")
+    for question in q_file:
+        questions.append(question)
+        question_count += 1
+    q_file.close()
+    
 
 def read_next_question():
-    pass
+    global question_index
+    question_index += 1
+    return questions.pop(0).split("|")
 
+def on_mouse_down(pos):
+    index = 1
+    for box in answer_boxes:
+        if box.collidepoint(pos):
+            if index == int(question[5]):
+                correct_answer()
+            else:
+                game_over()
         
+        index = index +1
+    if skip_box.collidepoint(pos):  
+        skip_question()
+        
+              
+
+def correct_answer():
+    global questions, time_left, question, score
+    score += 1
+    if questions: 
+        question = read_next_question()
+        time_left = 10
+    else:
+        game_over()
+
+
+def game_over():
+    global time_left, question, is_game_over
+    message = f"GAME OVER\n You got {score} questions correct!"
+    question = [message," "," "," "," ",5]
+    time_left = 0
+    is_game_over = True
+    
+    
+    
+def skip_question():
+    global question, time_left
+    if questions and not is_game_over:     #if more questions are left in the questions list and game is yet not over the restore it to the question()
+        question =read_next_question()
+        time_left = 10
+    else:
+        game_over()
         
 
+def update_time_left():
+    global time_left
+    if time_left:
+        time_left -= 1
+    else:
+        game_over()
+        
+
+read_question_file()
+question = read_next_question()
+clock.schedule_interval(update_time_left,1)
 
 pgzrun.go()
